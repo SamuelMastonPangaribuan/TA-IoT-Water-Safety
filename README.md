@@ -2,7 +2,7 @@
 
 ![Status](https://img.shields.io/badge/Status-Final%20Fix-success)
 ![Hardware](https://img.shields.io/badge/Hardware-ESP32%20%7C%20E32--TTL--100-blue)
-![Protocol](https://img.shields.io/badge/Protocol-UART%20%7C%20JSON-orange)
+![Architecture](https://img.shields.io/badge/Architecture-Dual%20Database-purple)
 
 ## 📖 Deskripsi Proyek
 **IoT Water Safety System** adalah perangkat keselamatan cerdas yang dirancang untuk memantau kondisi korban di area perairan *blank spot* (tanpa sinyal seluler). Sistem ini menggunakan modul komunikasi **LoRa E32-TTL-100 (UART)** untuk mengirimkan data telemetri dan koordinat GPS secara *real-time* ke pos pantau hingga jarak **4 KM** (Line of Sight).
@@ -17,6 +17,21 @@ Sistem dilengkapi dengan mekanisme **Hybrid Triggering** (Sensor Air Otomatis & 
 2.  **Smart GPS Lock:** Mengirimkan koordinat presisi. Jika GPS belum *lock*, sistem tetap mengirim status darurat dengan koordinat terakhir/kosong.
 3.  **Reliable Communication:** Menggunakan LoRa E32 (Ebyte) dengan antarmuka UART yang stabil dan jangkauan jauh.
 4.  **Safety Reset Mechanism:** Fitur reset alarm membutuhkan penekanan tombol 3 detik untuk mencegah reset tidak sengaja.
+
+---
+
+## 💾 Arsitektur Dual Database
+Sistem ini menerapkan strategi penyimpanan ganda (*Dual Database*) untuk memisahkan beban kerja antara data sensor yang cepat (*high-speed*) dengan data administratif aplikasi.
+
+### 1. InfluxDB (Time-Series Database)
+* **Fungsi:** Menyimpan data mentah sensor (*raw telemetry*) yang masuk secara *real-time* dan terus-menerus.
+* **Data yang Disimpan:** Koordinat (Lat, Lon), Nilai Sensor Air, Status SOS, RSSI (Kekuatan Sinyal), dan Timestamp.
+* **Tujuan:** Mengoptimalkan performa *query* untuk menampilkan grafik pergerakan korban dan rute perjalanan tanpa membebani database utama.
+
+### 2. MySQL / MariaDB (Relational Database)
+* **Fungsi:** Menyimpan data terstruktur yang berkaitan dengan manajemen aplikasi dan pengguna.
+* **Data yang Disimpan:** Profil User (Login), Daftar ID Perangkat (*Whitelisting*), dan Log Riwayat Insiden (History Alarm).
+* **Tujuan:** Menjamin integritas relasi data dan keamanan akses pengguna ke Dashboard.
 
 ---
 
