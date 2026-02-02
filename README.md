@@ -15,9 +15,8 @@
 
 [📖 About](#-deskripsi-proyek) •
 [🚀 Features](#-fitur-unggulan) •
-[🛠️ **Installation Guide**](#-installation--setup-guide-from-scratch) •
-[📊 Test Results](#-hasil-validasi-lapangan-field-test) •
-[🔌 Wiring](#-pin-mapping-wiring-configuration) •
+[🛠️ **Installation**](#-installation--setup-guide-from-scratch) •
+[📊 Results](#-hasil-validasi-lapangan-field-test) •
 [⚙️ Usage](#-user-guide-panduan-operasional)
 
 </div>
@@ -46,78 +45,72 @@ Modul **E32-TTL-100** memungkinkan transmisi data telemetri (Status Sensor & GPS
 
 ## 🛠️ Installation & Setup Guide (From Scratch)
 
-Panduan ini disusun secara berurutan mulai dari persiapan *hardware*, instalasi *software*, konfigurasi *server*, hingga alat siap digunakan.
+Panduan ini disusun secara berurutan mulai dari perakitan kabel (*wiring*), instalasi *software*, hingga alat siap digunakan.
 
-### 📦 Tahap 1: Persiapan Hardware
-Pastikan Anda memiliki komponen berikut sebelum memulai:
-1.  **2x ESP32 DevKit V1** (Satu untuk Transmitter/Korban, satu untuk Receiver/Pos Pantau).
-2.  **2x Modul LoRa E32-TTL-100** (Pastikan frekuensi sama, misal 433MHz atau 915MHz).
-3.  **1x Modul GPS Neo-6M** (Beserta antena keramik).
-4.  **1x Water Level Sensor** (Tipe resistif/garis-garis).
-5.  **1x Push Button** (Untuk tombol SOS).
-6.  **1x Active Buzzer** & LED Indikator.
-7.  **Kabel Jumper** & Breadboard/PCB.
+### 📦 Tahap 1: Persiapan Hardware & Wiring
+Siapkan komponen utama: 2x ESP32, 2x LoRa E32, 1x GPS Neo-6M, Sensor Air, dan Tombol.
+Rakit komponen mengikuti tabel pin di bawah ini (Sesuai kode `FINAL FIX`):
 
-> **Note:** Lakukan perakitan sesuai dengan diagram **[🔌 Pin Mapping](#-pin-mapping-wiring-configuration)** di bawah.
+#### **A. Koneksi LoRa E32 ke ESP32**
+*Catatan: Pastikan mode jumper M0 & M1 terhubung ke Ground untuk Mode Normal.*
+| Pin LoRa | Pin ESP32 | Keterangan |
+| :---: | :---: | :--- |
+| `VCC` | 3.3V / 5V | Cek spesifikasi modul |
+| `GND` | GND | Ground Common |
+| `TX` | **GPIO 16** | Masuk ke RX2 ESP32 |
+| `RX` | **GPIO 17** | Masuk ke TX2 ESP32 |
+| `M0` | GND | Mode Normal (0) |
+| `M1` | GND | Mode Normal (0) |
 
-### 💻 Tahap 2: Persiapan Environment (Laptop/PC)
-1.  **Install Arduino IDE:** Unduh versi terbaru di [arduino.cc](https://www.arduino.cc/en/software).
-2.  **Install Driver USB:**
-    * Jika ESP32 tidak terbaca, install driver **CP210x** atau **CH340** (sesuai chip USB di board ESP32 Anda).
-3.  **Setup Board ESP32:**
-    * Buka Arduino IDE -> `File` -> `Preferences`.
-    * Isi *Additional Boards Manager URLs*: `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
-    * Buka `Tools` -> `Board` -> `Boards Manager`, cari **"esp32"** dan klik **Install**.
+#### **B. Koneksi GPS Neo-6M ke ESP32**
+| Pin GPS | Pin ESP32 | Keterangan |
+| :---: | :---: | :--- |
+| `VCC` | 3.3V | Power Supply |
+| `TX` | **GPIO 34** | *Input Only Pin* (Aman untuk RX) |
+| `RX` | **GPIO 12** | Serial TX |
 
-### 📚 Tahap 3: Instalasi Library (Wajib)
-Tanpa library ini, kode tidak akan bisa di-compile. Install melalui `Sketch` -> `Include Library` -> `Manage Libraries`:
+#### **C. Sensor & Aktuator**
+| Komponen | Pin ESP32 | Mode Pin |
+| :--- | :---: | :--- |
+| **Water Sensor** | **GPIO 32** | `INPUT` (Analog ADC1) |
+| **Tombol SOS** | **GPIO 4** | `INPUT_PULLUP` (Aktif LOW) |
+| **Buzzer** | **GPIO 13** | `OUTPUT` (Active High) |
+| **LED Status (TX)** | **GPIO 26** | `OUTPUT` (Kedip saat kirim) |
+| **LED Bahaya (SOS)**| **GPIO 27** | `OUTPUT` (Nyala saat bahaya) |
 
-| Nama Library | Penulis | Fungsi |
-| :--- | :--- | :--- |
-| **TinyGPSPlus** | Mikal Hart | Parsing data NMEA dari modul GPS |
-| **LoRa_E32** | KrisKasprzak | Komunikasi UART dengan modul E32 |
-| **PubSubClient** | Nick O'Leary | Protokol MQTT (untuk Receiver ke Server) |
+---
+
+### 💻 Tahap 2: Persiapan Environment
+1.  **Install Arduino IDE:** Unduh di [arduino.cc](https://www.arduino.cc/en/software).
+2.  **Install Driver USB:** Pastikan driver **CP210x** atau **CH340** sudah terinstall agar ESP32 terbaca.
+3.  **Setup Board:**
+    * Buka `File` -> `Preferences`.
+    * Tambahkan URL: `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
+    * Buka `Tools` -> `Board` -> `Boards Manager`, install **"esp32"**.
+
+### 📚 Tahap 3: Instalasi Library
+Install library berikut via `Sketch` -> `Include Library` -> `Manage Libraries`:
+* `TinyGPSPlus` (by Mikal Hart)
+* `LoRa_E32` (by KrisKasprzak)
+* `PubSubClient` (by Nick O'Leary)
 
 ### 🗄️ Tahap 4: Konfigurasi Database & Backend
-Sistem ini membutuhkan server lokal/cloud untuk dashboard.
-1.  **MySQL (XAMPP/MariaDB):**
-    * Buka phpMyAdmin.
-    * Buat database baru bernama `db_watersafety`.
-    * Import file SQL yang tersedia di folder `database/db_watersafety.sql`.
-2.  **InfluxDB (Time Series):**
-    * Install InfluxDB.
-    * Buat Organization: `watersafety_org`.
-    * Buat Bucket: `sensor_data`.
-    * Salin **API Token** untuk dimasukkan ke konfigurasi Node-RED/Backend.
+1.  **MySQL:** Import file `database/db_watersafety.sql` ke phpMyAdmin.
+2.  **InfluxDB:** Buat bucket `sensor_data` dan salin API Token.
+3.  **Konfigurasi Kode:**
+    * Buka `Receiver_Gateway.ino`.
+    * Sesuaikan `SSID`, `PASSWORD`, dan kredensial Database Anda.
 
-### 🚀 Tahap 5: Kompilasi & Upload Firmware
-Lakukan langkah ini dua kali (sekali untuk alat korban, sekali untuk alat pos pantau).
-
-**A. Upload ke Transmitter (Alat Korban):**
-1.  Buka file `Transmitter_Final.ino`.
-2.  Sambungkan ESP32 Transmitter ke PC.
-3.  Pilih Board: `DOIT ESP32 DEVKIT V1`.
-4.  Cek Port: `Tools` -> `Port` (Pilih COM yang aktif).
-5.  Klik **Upload (➡️)**. Tunggu sampai "Done uploading".
-
-**B. Upload ke Receiver (Gateway Pos Pantau):**
-1.  Buka file `Receiver_Gateway.ino`.
-2.  **Edit Konfigurasi WiFi:** Cari baris `const char* ssid = "..."` dan ubah sesuai hotspot/WiFi Anda.
-3.  Sambungkan ESP32 Receiver ke PC.
-4.  Klik **Upload (➡️)**.
-
-### ✅ Tahap 6: Pengujian Sistem (Running Test)
-1.  **Nyalakan Serial Monitor** di Arduino IDE (Baudrate **115200**).
-2.  Pastikan modul LoRa sudah terhubung (Pesan: *"LoRa Init Success"*).
-3.  Bawa alat Transmitter ke luar ruangan agar GPS mendapat sinyal (*GPS Lock*).
-4.  Tekan tombol SOS atau celupkan sensor air.
-5.  Cek apakah data muncul di Dashboard/Database.
+### 🚀 Tahap 5: Upload Firmware
+1.  **Transmitter (Alat Korban):** Upload file `Transmitter_Final.ino`.
+2.  **Receiver (Pos Pantau):** Upload file `Receiver_Gateway.ino`.
+    * *Setting:* Board "DOIT ESP32 DEVKIT V1", Upload Speed "921600".
 
 ---
 
 ## 📊 Hasil Validasi Lapangan (Field Test)
 
-Perangkat telah diuji di 3 lokasi berbeda untuk memvalidasi akurasi modul GPS Neo-6M. Berikut adalah ringkasan hasil pengujian:
+Perangkat telah diuji di 3 lokasi berbeda untuk memvalidasi akurasi modul GPS Neo-6M.
 
 ### 📍 Ringkasan Akurasi GPS
 | Lokasi Uji | Koordinat Acuan (*Ground Truth*) | Rata-rata Error | Status |
