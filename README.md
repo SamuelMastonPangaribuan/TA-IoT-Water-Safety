@@ -6,7 +6,7 @@
 ![Status](https://img.shields.io/badge/Status-FINAL%20FIX-success?style=for-the-badge&logo=checkbox)
 ![Hardware](https://img.shields.io/badge/Hardware-ESP32%20%7C%20GPS%20Neo--6M-blue?style=for-the-badge&logo=arduino)
 ![LoRa](https://img.shields.io/badge/Comms-LoRa%20E32%20(4KM)-orange?style=for-the-badge&logo=lora)
-![Accuracy](https://img.shields.io/badge/GPS%20Accuracy-~1.7%20Meter-green?style=for-the-badge&logo=google-maps)
+![Backend](https://img.shields.io/badge/Backend-Golang-cyan?style=for-the-badge&logo=go)
 
 <p align="center">
   <b>Sistem keselamatan cerdas untuk perairan tanpa sinyal seluler.</b><br>
@@ -15,7 +15,7 @@
 
 [📖 About](#-deskripsi-proyek) •
 [🚀 Features](#-fitur-unggulan) •
-[🛠️ **Installation**](#-installation--setup-guide-from-scratch) •
+[🛠️ **Installation Guide**](#-installation--setup-guide-from-scratch) •
 [📊 Results](#-hasil-validasi-lapangan-field-test) •
 [⚙️ Usage](#-user-guide-panduan-operasional)
 
@@ -27,7 +27,7 @@
 
 **IoT Water Safety System** adalah perangkat *wearable* keselamatan yang dirancang khusus untuk area *blank spot* (laut lepas/hutan). Sistem ini mengatasi keterbatasan sinyal GSM dengan menggunakan teknologi **LoRa (Long Range)**.
 
-Modul **E32-TTL-100** memungkinkan transmisi data telemetri (Status Sensor & GPS) hingga jarak **4 KM** (Line of Sight) dari korban ke pos pantau. Data kemudian diproses menggunakan arsitektur **Dual Database** untuk visualisasi yang cepat dan penyimpanan log yang aman.
+Modul **E32-TTL-100** memungkinkan transmisi data telemetri (Status Sensor & GPS) hingga jarak **4 KM** (Line of Sight) dari korban ke pos pantau. Data kemudian diproses menggunakan **Golang Backend** dan disimpan dalam arsitektur **Dual Database**.
 
 ---
 
@@ -45,14 +45,13 @@ Modul **E32-TTL-100** memungkinkan transmisi data telemetri (Status Sensor & GPS
 
 ## 🛠️ Installation & Setup Guide (From Scratch)
 
-Panduan ini disusun secara berurutan mulai dari perakitan kabel (*wiring*), instalasi *software*, hingga alat siap digunakan.
+Panduan ini disusun secara berurutan mulai dari perakitan, instalasi tools (VS Code & Arduino), hingga menjalankan server Backend.
 
 ### 📦 Tahap 1: Persiapan Hardware & Wiring
-Siapkan komponen utama: 2x ESP32, 2x LoRa E32, 1x GPS Neo-6M, Sensor Air, dan Tombol.
 Rakit komponen mengikuti tabel pin di bawah ini (Sesuai kode `FINAL FIX`):
 
-#### **A. Koneksi LoRa E32 ke ESP32**
-*Catatan: Pastikan mode jumper M0 & M1 terhubung ke Ground untuk Mode Normal.*
+**A. Koneksi LoRa E32 ke ESP32**
+*Catatan: Pastikan jumper M0 & M1 terhubung ke Ground.*
 | Pin LoRa | Pin ESP32 | Keterangan |
 | :---: | :---: | :--- |
 | `VCC` | 3.3V / 5V | Cek spesifikasi modul |
@@ -62,49 +61,97 @@ Rakit komponen mengikuti tabel pin di bawah ini (Sesuai kode `FINAL FIX`):
 | `M0` | GND | Mode Normal (0) |
 | `M1` | GND | Mode Normal (0) |
 
-#### **B. Koneksi GPS Neo-6M ke ESP32**
+**B. Koneksi GPS Neo-6M ke ESP32**
 | Pin GPS | Pin ESP32 | Keterangan |
 | :---: | :---: | :--- |
 | `VCC` | 3.3V | Power Supply |
 | `TX` | **GPIO 34** | *Input Only Pin* (Aman untuk RX) |
 | `RX` | **GPIO 12** | Serial TX |
 
-#### **C. Sensor & Aktuator**
+**C. Sensor & Aktuator**
 | Komponen | Pin ESP32 | Mode Pin |
 | :--- | :---: | :--- |
 | **Water Sensor** | **GPIO 32** | `INPUT` (Analog ADC1) |
 | **Tombol SOS** | **GPIO 4** | `INPUT_PULLUP` (Aktif LOW) |
 | **Buzzer** | **GPIO 13** | `OUTPUT` (Active High) |
-| **LED Status (TX)** | **GPIO 26** | `OUTPUT` (Kedip saat kirim) |
-| **LED Bahaya (SOS)**| **GPIO 27** | `OUTPUT` (Nyala saat bahaya) |
+| **LED Status** | **GPIO 26** | `OUTPUT` (Indikator TX) |
 
 ---
 
-### 💻 Tahap 2: Persiapan Environment
-1.  **Install Arduino IDE:** Unduh di [arduino.cc](https://www.arduino.cc/en/software).
-2.  **Install Driver USB:** Pastikan driver **CP210x** atau **CH340** sudah terinstall agar ESP32 terbaca.
-3.  **Setup Board:**
-    * Buka `File` -> `Preferences`.
-    * Tambahkan URL: `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
-    * Buka `Tools` -> `Board` -> `Boards Manager`, install **"esp32"**.
+### 💻 Tahap 2: Persiapan Software (VS Code & Tools)
+Sebelum coding, install software berikut secara berurutan:
 
-### 📚 Tahap 3: Instalasi Library
-Install library berikut via `Sketch` -> `Include Library` -> `Manage Libraries`:
+1.  **Visual Studio Code (VS Code):**
+    * Download dan install dari [code.visualstudio.com](https://code.visualstudio.com/).
+    * Buka VS Code, pilih menu **Extensions** (kotak kiri), cari dan install:
+        * `Go` (by Go Team at Google).
+        * `Arduino` (optional, jika ingin coding Arduino di VS Code).
+
+2.  **Go (Golang) Compiler:**
+    * Download dan install dari [go.dev/dl](https://go.dev/dl/).
+    * Cek instalasi via CMD/Terminal: `go version`.
+
+3.  **Arduino IDE:**
+    * Download dari [arduino.cc](https://www.arduino.cc/en/software).
+    * **Install Driver USB:** Pastikan driver **CP210x** atau **CH340** terinstall.
+    * **Setup Board:** Buka Arduino IDE -> `File` -> `Preferences`. Tambahkan URL:
+        `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
+    * Install **"esp32"** via Boards Manager.
+
+---
+
+### 📚 Tahap 3: Instalasi Library Arduino
+Install library berikut via Arduino IDE (`Sketch` -> `Include Library` -> `Manage Libraries`):
 * `TinyGPSPlus` (by Mikal Hart)
 * `LoRa_E32` (by KrisKasprzak)
-* `PubSubClient` (by Nick O'Leary)
+* `PubSubClient` (by Nick O'Leary) - *Khusus Receiver*
 
-### 🗄️ Tahap 4: Konfigurasi Database & Backend
-1.  **MySQL:** Import file `database/db_watersafety.sql` ke phpMyAdmin.
-2.  **InfluxDB:** Buat bucket `sensor_data` dan salin API Token.
-3.  **Konfigurasi Kode:**
-    * Buka `Receiver_Gateway.ino`.
-    * Sesuaikan `SSID`, `PASSWORD`, dan kredensial Database Anda.
+---
 
-### 🚀 Tahap 5: Upload Firmware
-1.  **Transmitter (Alat Korban):** Upload file `Transmitter_Final.ino`.
-2.  **Receiver (Pos Pantau):** Upload file `Receiver_Gateway.ino`.
-    * *Setting:* Board "DOIT ESP32 DEVKIT V1", Upload Speed "921600".
+### 🗄️ Tahap 4: Konfigurasi Database
+1.  **MySQL:**
+    * Buka phpMyAdmin.
+    * Import file `database/db_watersafety.sql`.
+2.  **InfluxDB:**
+    * Buat bucket `sensor_data` dan salin **API Token**.
+
+---
+
+### 🚀 Tahap 5: Upload Firmware (Hardware)
+1.  **Transmitter (Alat Korban):** Buka `Transmitter_Final.ino`, upload ke ESP32 Korban.
+2.  **Receiver (Pos Pantau):** Buka `Receiver_Gateway.ino`.
+    * Edit bagian `ssid` dan `password` WiFi.
+    * Upload ke ESP32 Gateway.
+
+---
+
+### 🖥️ Tahap 6: Setup Backend Golang (VS Code)
+Bagian ini menjelaskan cara menjalankan server backend untuk Dashboard.
+
+1.  **Buka Project di VS Code:**
+    * Buka aplikasi **Visual Studio Code**.
+    * Klik `File` -> `Open Folder`.
+    * Pilih folder **`backend`** yang ada di dalam folder proyek ini.
+    * *Struktur folder biasanya berisi: `main.go`, `go.mod`, `controllers/`, dll.*
+
+2.  **Install Dependencies:**
+    * Di VS Code, buka Terminal (`Ctrl + J` atau `Terminal` -> `New Terminal`).
+    * Ketik perintah berikut untuk mengunduh library yang dibutuhkan:
+        ```bash
+        go mod tidy
+        ```
+
+3.  **Konfigurasi Koneksi:**
+    * Cari file `config/config.go` atau `.env` (tergantung struktur).
+    * Sesuaikan user/password database MySQL dan InfluxDB Token.
+
+4.  **Jalankan Server:**
+    * Di Terminal VS Code, ketik:
+        ```bash
+        go run main.go
+        ```
+    * Jika berhasil, akan muncul pesan: `Server running on port :8080`.
+    * Buka browser dan akses: `http://localhost:8080` untuk melihat Dashboard.
 
 ---
 
@@ -125,18 +172,15 @@ Perangkat telah diuji di 3 lokasi berbeda untuk memvalidasi akurasi modul GPS Ne
 
 ## 💾 Arsitektur Sistem & Database
 
-Sistem ini menggunakan strategi **Dual Database** untuk memisahkan beban kerja data sensor yang berat dengan data manajemen aplikasi.
-
 ```mermaid
 graph TD
     A[ESP32 Transmitter] -->|LoRa RF| B[ESP32 Receiver/Gateway]
-    B -->|MQTT/WiFi| C[Node-RED / Backend]
+    B -->|MQTT/WiFi| C[Golang Backend]
     
     C -->|Telemetry Data| D[(InfluxDB)]
     C -->|User & Logs| E[(MySQL / MariaDB)]
     
-    D --> F[Real-time Map Dashboard]
+    D --> F[Web Dashboard]
     E --> F
     
-    style D fill:#ee0,stroke:#333,stroke-width:2px
-    style E fill:#0dd,stroke:#333,stroke-width:2px
+    style C fill:#0ff,stroke:#333,stroke-width:2px
