@@ -13,11 +13,11 @@
   Mengirimkan titik koordinat korban secara <i>real-time</i> dengan latensi rendah dan jangkauan jauh.
 </p>
 
-[📖 About](#-deskripsi-proyek) •
-[🚀 Features](#-fitur-unggulan) •
-[🛠️ **Installation Guide**](#-installation--setup-guide-from-scratch) •
-[📊 Results](#-hasil-validasi-lapangan-field-test) •
-[⚙️ Usage](#-user-guide-panduan-operasional)
+[📖 Deskripsi](#-deskripsi-proyek) •
+[🚀 Fitur](#-fitur-unggulan) •
+[🛠️ Installation](#-installation--setup-guide) •
+[📊 Hasil Uji](#-hasil-pengujian--validasi-lapangan) •
+[⚙️ Cara Pakai](#️-panduan-pemakaian-alat-untuk-klien)
 
 </div>
 
@@ -25,9 +25,9 @@
 
 ## 📖 Deskripsi Proyek
 
-**IoT Water Safety System** adalah perangkat *wearable* keselamatan yang dirancang khusus untuk area *blank spot* (laut lepas/hutan). Sistem ini mengatasi keterbatasan sinyal GSM dengan menggunakan teknologi **LoRa (Long Range)**.
+**IoT Water Safety System** adalah perangkat *wearable* keselamatan yang dirancang khusus untuk area *blank spot* (laut lepas, danau, atau hutan). Sistem ini mengatasi keterbatasan sinyal GSM dengan menggunakan teknologi komunikasi **LoRa (Long Range)**.
 
-Modul **E32-TTL-100** memungkinkan transmisi data telemetri (Status Sensor & GPS) hingga jarak **4 KM** (Line of Sight) dari korban ke pos pantau. Data kemudian diproses menggunakan **Golang Backend** dan disimpan dalam arsitektur **Dual Database**.
+Modul **E32-TTL-100** memungkinkan transmisi data telemetri (Status Sensor Air, Tombol SOS, & Koordinat GPS) hingga jarak maksimal **4 KM** (Line of Sight) dari korban ke pos pantau (Gateway). Data kemudian diproses menggunakan **Golang Backend** dan disimpan dalam arsitektur **Dual Database** untuk visualisasi peta *real-time*.
 
 ---
 
@@ -35,152 +35,111 @@ Modul **E32-TTL-100** memungkinkan transmisi data telemetri (Status Sensor & GPS
 
 | Fitur | Deskripsi |
 | :--- | :--- |
-| 🚨 **Hybrid Triggering** | Aktivasi alarm ganda: **Otomatis** (Sensor Air) saat tenggelam, atau **Manual** (Tombol SOS). |
-| 🛰️ **Smart GPS Lock** | Algoritma cerdas yang mengirimkan koordinat presisi, atau data terakhir jika satelit belum terkunci. |
-| 📡 **Long Range (LoRa)** | Komunikasi radio mandiri (433/915 MHz) yang stabil hingga 4KM tanpa pulsa/internet. |
-| 🛡️ **Safety Reset** | Mencegah reset alarm yang tidak disengaja dengan mekanisme *Hold Button* selama 3 detik. |
-| ⚡ **Real-time Dashboard** | Visualisasi posisi korban pada peta digital dengan update per detik. |
+| 🚨 **Hybrid Triggering** | Aktivasi alarm ganda: **Otomatis** (saat sensor air tenggelam) atau **Manual** (tekan tombol SOS). |
+| 🛰️ **Smart GPS Lock** | Algoritma cerdas yang mengirimkan koordinat presisi. Jika satelit belum terkunci, mengirim lokasi terakhir. |
+| 📡 **Long Range (LoRa)** | Komunikasi radio frekuensi mandiri (433MHz/915MHz) tanpa memerlukan pulsa, kuota, atau internet di area korban. |
+| 🛡️ **Safety Reset** | Mencegah *false alarm* (reset tidak disengaja) dengan mekanisme *Hold Button* selama 3 detik. |
+| ⚡ **Dual DB Dashboard** | Visualisasi posisi korban yang cepat dan log historis yang aman menggunakan InfluxDB dan MySQL. |
 
 ---
 
-## 🛠️ Installation & Setup Guide (From Scratch)
+## ⚙️ Panduan Pemakaian Alat (Untuk Klien)
 
-Panduan ini disusun secara berurutan mulai dari perakitan, instalasi tools (VS Code & Arduino), hingga menjalankan server Backend.
+Penggunaan alat ini dirancang sangat mudah dan otomatis bagi pengguna di lapangan. Cukup ikuti 3 langkah berikut:
 
-### 📦 Tahap 1: Persiapan Hardware & Wiring
-Rakit komponen mengikuti tabel pin di bawah ini (Sesuai kode `FINAL FIX`):
+### 1️⃣ Pasang & Nyalakan Alat
+* Pasang perangkat *Water Safety* ini di lengan, pelampung, atau badan Anda.
+* Colokkan baterai atau nyalakan tombol *Power*.
+* **Selesai!** Anda tidak perlu melakukan apa-apa lagi. Saat berada di luar ruangan, alat akan otomatis melacak koordinat GPS Anda dan langsung mengirimkannya ke Server. Pos pantau (tim SAR/Pengawas) sudah bisa melihat titik lokasi Anda bergerak secara *real-time* di layar Web Dashboard mereka.
+
+### 2️⃣ Jika Terjadi Kondisi Darurat (Butuh Bantuan)
+Sistem memiliki dua cara untuk meminta tolong:
+* **Cara Manual (Tekan Tombol):** Jika Anda tiba-tiba mengalami kram, kelelahan, atau merasa dalam bahaya, cukup **Tekan Tombol SOS 1x**.
+* **Cara Otomatis (Tenggelam):** Jika Anda jatuh dan tidak sempat menekan tombol, tenang saja. Sensor pada alat akan langsung mendeteksi air saat terendam penuh dan otomatis memicu alarm.
+> *Begitu mode darurat aktif, alat di lengan Anda akan berbunyi beep terus-menerus. Di saat yang sama, Web Dashboard di Pos Pantau akan berkedip merah dan membunyikan alarm agar tim penyelamat segera menuju lokasi koordinat Anda.*
+
+### 3️⃣ Jika Sudah Aman (Matikan Alarm)
+* Jika bantuan sudah datang, atau jika alarm tidak sengaja menyala (misal terkena cipratan ombak besar padahal Anda aman), Anda bisa mematikan alarmnya.
+* Caranya: **Tekan dan TAHAN Tombol SOS selama 3 Detik.**
+* Bunyi alat akan mati, dan Web di Pos Pantau akan kembali ke status "AMAN".
+
+---
+
+## 🛠️ Installation & Setup Guide (Teknis)
+
+*(Bagian ini khusus untuk developer/teknisi yang ingin merakit atau memodifikasi ulang sistem).*
+
+### 📦 Tahap 1: Perakitan Hardware (Wiring)
+Rakit komponen Node/Transmitter mengikuti tabel pin di bawah ini (Sesuai kode `FINAL FIX`):
 
 **A. Koneksi LoRa E32 ke ESP32**
-*Catatan: Pastikan jumper M0 & M1 terhubung ke Ground.*
 | Pin LoRa | Pin ESP32 | Keterangan |
 | :---: | :---: | :--- |
-| `VCC` | 3.3V / 5V | Cek spesifikasi modul |
+| `VCC` | 3.3V / 5V | Cek spesifikasi tegangan modul |
 | `GND` | GND | Ground Common |
-| `TX` | **GPIO 16** | Masuk ke RX2 ESP32 |
-| `RX` | **GPIO 17** | Masuk ke TX2 ESP32 |
-| `M0` | GND | Mode Normal (0) |
-| `M1` | GND | Mode Normal (0) |
+| `TX` | **GPIO 16** | Masuk ke RX2 ESP32 (Cross-Wiring) |
+| `RX` | **GPIO 17** | Masuk ke TX2 ESP32 (Cross-Wiring) |
+| `M0 & M1`| GND | Hubungkan ke Ground untuk Mode Normal |
 
-**B. Koneksi GPS Neo-6M ke ESP32**
-| Pin GPS | Pin ESP32 | Keterangan |
-| :---: | :---: | :--- |
-| `VCC` | 3.3V | Power Supply |
-| `TX` | **GPIO 34** | *Input Only Pin* (Aman untuk RX) |
-| `RX` | **GPIO 12** | Serial TX |
-
-**C. Sensor & Aktuator**
-| Komponen | Pin ESP32 | Mode Pin |
+**B. Koneksi Modul GPS & Sensor ke ESP32**
+| Komponen | Pin ESP32 | Mode / Keterangan |
 | :--- | :---: | :--- |
-| **Water Sensor** | **GPIO 32** | `INPUT` (Analog ADC1) |
-| **Tombol SOS** | **GPIO 4** | `INPUT_PULLUP` (Aktif LOW) |
-| **Buzzer** | **GPIO 13** | `OUTPUT` (Active High) |
-| **LED Status** | **GPIO 26** | `OUTPUT` (Indikator TX) |
+| **GPS Neo-6M (TX)** | **GPIO 34** | `Input Only Pin` (Menerima data dari satelit) |
+| **Water Sensor (S)** | **GPIO 32** | `INPUT` (Membaca Analog ADC1) |
+| **Tombol SOS** | **GPIO 4** | `INPUT_PULLUP` (Aktif LOW saat ditekan) |
+| **Active Buzzer** | **GPIO 13** | `OUTPUT` (Alarm suara saat bahaya) |
 
----
+### 💻 Tahap 2: Persiapan Software
+1.  **Visual Studio Code (VS Code):** Install dari [code.visualstudio.com](https://code.visualstudio.com/). Buka menu *Extensions*, install **`Go`** (by Google).
+2.  **Go (Golang) Compiler:** Download dan install dari [go.dev/dl](https://go.dev/dl/).
+3.  **Arduino IDE:** Download dari [arduino.cc](https://www.arduino.cc/en/software). Tambahkan URL Board ESP32: `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`. Install **"esp32"** via Boards Manager.
 
-### 💻 Tahap 2: Persiapan Software (VS Code & Tools)
-Sebelum coding, install software berikut secara berurutan:
-
-1.  **Visual Studio Code (VS Code):**
-    * Download dan install dari [code.visualstudio.com](https://code.visualstudio.com/).
-    * Buka VS Code, pilih menu **Extensions** (kotak kiri), cari dan install:
-        * `Go` (by Go Team at Google).
-        * `Arduino` (optional, jika ingin coding Arduino di VS Code).
-
-2.  **Go (Golang) Compiler:**
-    * Download dan install dari [go.dev/dl](https://go.dev/dl/).
-    * Cek instalasi via CMD/Terminal: `go version`.
-
-3.  **Arduino IDE:**
-    * Download dari [arduino.cc](https://www.arduino.cc/en/software).
-    * **Install Driver USB:** Pastikan driver **CP210x** atau **CH340** terinstall.
-    * **Setup Board:** Buka Arduino IDE -> `File` -> `Preferences`. Tambahkan URL:
-        `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
-    * Install **"esp32"** via Boards Manager.
-
----
-
-### 📚 Tahap 3: Instalasi Library Arduino
-Install library berikut via Arduino IDE (`Sketch` -> `Include Library` -> `Manage Libraries`):
-* `TinyGPSPlus` (by Mikal Hart)
-* `LoRa_E32` (by KrisKasprzak)
-* `PubSubClient` (by Nick O'Leary) - *Khusus Receiver*
-
----
+### 📚 Tahap 3: Instalasi Library (Arduino IDE)
+Masuk ke `Sketch` -> `Include Library` -> `Manage Libraries`, lalu install: `TinyGPSPlus`, `LoRa_E32`, dan `PubSubClient`.
 
 ### 🗄️ Tahap 4: Konfigurasi Database
-1.  **MySQL:**
-    * Buka phpMyAdmin.
-    * Import file `database/db_watersafety.sql`.
-2.  **InfluxDB:**
-    * Buat bucket `sensor_data` dan salin **API Token**.
+1.  **MySQL:** Buka phpMyAdmin, buat DB `db_watersafety`, lalu *Import* file `database/db_watersafety.sql`.
+2.  **InfluxDB:** Buat bucket bernama `sensor_data` dan simpan **API Token** Anda.
+
+### 🚀 Tahap 5: Upload Firmware ke ESP32
+1.  **Transmitter:** Buka `Transmitter_Final.ino`, lalu *Upload* ke ESP32 Korban.
+2.  **Receiver:** Buka `Receiver_Gateway.ino`. Edit `ssid` dan `password` WiFi, lalu *Upload* ke ESP32 Pos Pantau.
+
+### 🖥️ Tahap 6: Menjalankan Backend Golang (Server)
+1.  Buka folder **`backend`** di VS Code.
+2.  Buka terminal (`Ctrl + J`), download dependensi: `go mod tidy`.
+3.  Konfigurasi koneksi MySQL dan InfluxDB di `config/config.go`.
+4.  Jalankan server: `go run main.go`. Akses Web di `http://localhost:8080`.
 
 ---
 
-### 🚀 Tahap 5: Upload Firmware (Hardware)
-1.  **Transmitter (Alat Korban):** Buka `Transmitter_Final.ino`, upload ke ESP32 Korban.
-2.  **Receiver (Pos Pantau):** Buka `Receiver_Gateway.ino`.
-    * Edit bagian `ssid` dan `password` WiFi.
-    * Upload ke ESP32 Gateway.
+## 📊 Hasil Pengujian & Validasi Lapangan
 
----
-
-### 🖥️ Tahap 6: Setup Backend Golang (VS Code)
-Bagian ini menjelaskan cara menjalankan server backend untuk Dashboard.
-
-1.  **Buka Project di VS Code:**
-    * Buka aplikasi **Visual Studio Code**.
-    * Klik `File` -> `Open Folder`.
-    * Pilih folder **`backend`** yang ada di dalam folder proyek ini.
-    * *Struktur folder biasanya berisi: `main.go`, `go.mod`, `controllers/`, dll.*
-
-2.  **Install Dependencies:**
-    * Di VS Code, buka Terminal (`Ctrl + J` atau `Terminal` -> `New Terminal`).
-    * Ketik perintah berikut untuk mengunduh library yang dibutuhkan:
-        ```bash
-        go mod tidy
-        ```
-
-3.  **Konfigurasi Koneksi:**
-    * Cari file `config/config.go` atau `.env` (tergantung struktur).
-    * Sesuaikan user/password database MySQL dan InfluxDB Token.
-
-4.  **Jalankan Server:**
-    * Di Terminal VS Code, ketik:
-        ```bash
-        go run main.go
-        ```
-    * Jika berhasil, akan muncul pesan: `Server running on port :8080`.
-    * Buka browser dan akses: `http://localhost:8080` untuk melihat Dashboard.
-
----
-
-## 📊 Hasil Validasi Lapangan (Field Test)
-
-Perangkat telah diuji di 3 lokasi berbeda untuk memvalidasi akurasi modul GPS Neo-6M.
-
-### 📍 Ringkasan Akurasi GPS
-| Lokasi Uji | Koordinat Acuan (*Ground Truth*) | Rata-rata Error | Status |
+### 📍 1. Akurasi GPS Neo-6M (Static Test)
+| Lokasi Uji | Kondisi Lingkungan | Rata-rata Error | Kesimpulan |
 | :--- | :--- | :---: | :---: |
-| **Lokasi 1** (Lapangan Terbuka) | `2.385994, 99.148044` | **1.71 Meter** | ✅ Sangat Valid |
-| **Lokasi 2** (Area Taman) | `2.386593, 99.147932` | **2.04 Meter** | ✅ Valid |
-| **Lokasi 3** (Bundaran) | `2.385112, 99.147781` | **1.26 Meter** | 🌟 **Terbaik** |
+| **Area Lapangan** | Minim halangan (*Open Sky*) | **1.71 Meter** | Sangat Valid |
+| **Area Taman** | Semi-terbuka (Pohon & Bangunan) | **2.04 Meter** | Valid |
+| **Area Bundaran** | Terbuka penuh, minim interferensi | **1.26 Meter** | **Sangat Presisi** |
 
-> **Analisis:** Dengan rata-rata error keseluruhan di bawah **2.5 Meter**, alat ini memenuhi standar keselamatan (toleransi GPS sipil umumnya 2.5 - 5 meter).
+### ⏱️ 2. Stabilitas Pengiriman Data LoRa (Interval Target: 5 Detik)
+* **Jarak 200m:** Rata-rata interval **5.00 detik** (Delay 0s). 100% Packet Delivery.
+* **Jarak 300m - 1 KM:** Rata-rata interval **~5.7 detik**. Terdapat delay minor (< 1s) untuk *retransmission*.
+* **Jarak 1.2 KM:** Rata-rata interval **6.42 detik**. Delay mencapai 1.4 detik per paket. Alat berfungsi, tapi *real-time* menurun.
 
 ---
 
-## 💾 Arsitektur Sistem & Database
+## 💾 Arsitektur Sistem
 
 ```mermaid
 graph TD
-    A[ESP32 Transmitter] -->|LoRa RF| B[ESP32 Receiver/Gateway]
-    B -->|MQTT/WiFi| C[Golang Backend]
+    A[ESP32 Transmitter] -->|LoRa RF 433MHz| B[ESP32 Gateway]
+    B -->|MQTT / TCP/IP| C[Golang Backend Server]
     
-    C -->|Telemetry Data| D[(InfluxDB)]
-    C -->|User & Logs| E[(MySQL / MariaDB)]
+    C -->|Time-Series Data| D[(InfluxDB)]
+    C -->|User, Auth, & Logs| E[(MySQL / MariaDB)]
     
-    D --> F[Web Dashboard]
+    D --> F[Real-time Web Dashboard]
     E --> F
     
     style C fill:#0ff,stroke:#333,stroke-width:2px
